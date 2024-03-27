@@ -1,37 +1,33 @@
-
-
 #include "tsCommon.h"
 #include "tsTransportStream.h"
-#include <vector>
-#include <iostream>
+using namespace std;
 
 //=============================================================================================================================================================================
 
 int main(int argc, char *argv[ ], char *envp[ ])
 {
-  // TODO - open file
-  int is_ok = EXIT_FAILURE;
-  FILE* stream = fopen("/home/student/Downloads/parser/tsTransportStream.h", "rb");
-  // TODO - check if file if opened
-  if (!stream)
-    {
-        std::perror("File opening failed");
-        return is_ok;
-    }
+  //TODO - open file
+  FILE* stream = std::fopen("/home/user/repos/TS_parser/tsTransportStream.h", "rb");
 
-  xTS_PacketHeader    TS_PacketHeader;
+  //TODO - check if file if opened
+  if (!stream) {
+      return EXIT_FAILURE;
+  }
 
+  xTS_PacketHeader TS_PacketHeader;
+
+  const uint8_t size = 188;
+  uint8_t  buf[size];
   int32_t TS_PacketId = 0;
-  while(!feof(stream)){
-    
-    // TODO - read from file
-    const uint8_t size = 188;
-    uint8_t buf[size]; 
+
+
+  while(!feof(stream))
+  {
+    //TODO - read from file
     fread(buf, 1, 188, stream);
-    
 
     TS_PacketHeader.Reset();
-    TS_PacketHeader.Parse(/*TS_PacketBuffer*/ nullptr);
+    TS_PacketHeader.Parse(buf);
 
     printf("%010d ", TS_PacketId);
     TS_PacketHeader.Print();
@@ -39,12 +35,11 @@ int main(int argc, char *argv[ ], char *envp[ ])
 
     TS_PacketId++;
   }
-  
-  // TODO - close file
+
+  //TODO - close file
   fclose(stream);
 
   return EXIT_SUCCESS;
 }
 
 //=============================================================================================================================================================================
-

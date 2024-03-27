@@ -83,16 +83,8 @@ public:
   void     Print() const;
 
 public:
-  //TODO - direct acces to header field value, e.g.:
-  uint8_t  getSyncByte() const { return m_SB; } 
-  uint8_t  getErrorIndicator() const { return m_TEI; }  
-  uint8_t  getStartIndicator() const { return m_PSI; }  
-  uint8_t  getPriority() const { return m_TP; }  
-  uint8_t  getPID() const { return m_PID; } 
-  uint8_t  getScramblingControl() const { return m_TSC; } 
-  uint8_t  getAdaptationField() const { return m_AFC; }  
-  uint8_t  getContinuityCounter() const { return m_CC; }  
-
+  //TODO - direct access to header field value, e.g.:
+  uint8_t  getSyncByte() const { return m_SB; }  
 
 public:
   //TODO - derrived informations
