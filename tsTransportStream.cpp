@@ -1,5 +1,6 @@
 #include <iostream>
 #include "tsTransportStream.h"
+using namespace std;
 
 //=============================================================================================================================================================================
 // xTS_PacketHeader
@@ -20,37 +21,32 @@ int32_t xTS_PacketHeader::Parse(const uint8_t *Input) {
     uint32_t *HeaderPtr = (uint32_t *) Input;
     uint32_t HeaderData = xSwapBytes32(*HeaderPtr);
 
-    uint32_t TEI_mask = 0b00000000100000000000000000000000;
-    uint32_t PSI_mask = 0b00000000010000000000000000000000;
-    uint32_t TP_mask = 0b00000000000100000000000000000000;
-    uint32_t PID_mask = 0b00000000000111111111111100000000;
-    uint32_t TSC_mask = 0b00000000000000000000000011000000;
-    uint32_t AFC_mask = 0b00000000000000000000000000110000;
-    uint32_t CC_mask = 0b00000000000000000000000000001111;
+    uint32_t b_TEI =  0b00000000100000000000000000000000;
+    uint32_t b_PSI =  0b00000000010000000000000000000000;
+    uint32_t b_TP =   0b00000000000100000000000000000000;
+    uint32_t b_PID =  0b00000000000111111111111100000000;
+    uint32_t b_TSC =  0b00000000000000000000000011000000;
+    uint32_t b_AFC =  0b00000000000000000000000000110000;
+    uint32_t b_CC =   0b00000000000000000000000000001111;
 
     m_SB = HeaderData >> 24;
-    m_TEI = (HeaderData & TEI_mask) >> 23;
-    m_PSI = (HeaderData & PSI_mask) >> 22;
-    m_TP = (HeaderData & TP_mask) >> 21;
-    m_PID = (HeaderData & PID_mask) >> 8;
-    m_TSC = (HeaderData & TSC_mask) >> 6;
-    m_AFC = (HeaderData & AFC_mask) >> 4;
-    m_CC = HeaderData & CC_mask;
+    m_TEI = (HeaderData & b_TEI) >> 23;
+    m_PSI = (HeaderData & b_PSI) >> 22;
+    m_TP = (HeaderData & b_TP) >> 21;
+    m_PID = (HeaderData & b_PID) >> 8;
+    m_TSC = (HeaderData & b_TSC) >> 6;
+    m_AFC = (HeaderData & b_AFC) >> 4;
+    m_CC = HeaderData & b_CC;
 
     return NOT_VALID;
 }
 
 /// @brief Print all TS packet header fields
 void xTS_PacketHeader::Print() const {
-    printf("TS:");
-    printf(" SB=%d", m_SB);
-    printf(" E=%d", m_TEI);
-    printf(" S=%d", m_PSI);
-    printf(" T=%d", m_TP);
-    printf(" PID=%d", m_PID);
-    printf(" TSC=%d", m_TSC);
-    printf(" AFC=%d", m_AFC);
-    printf(" CC=%d", m_CC);
+  cout << "TS: SB=" << to_string(m_SB) << " E=" << to_string(m_TEI) 
+       << " S=" << to_string(m_PSI) << " T=" << to_string(m_TP) 
+       << " PID=" << to_string(m_PID) << " TSC=" << to_string(m_TSC) 
+       << " AFC=" << to_string(m_AFC) << " CC=" << to_string(m_CC);
 }
 
 //=============================================================================================================================================================================
