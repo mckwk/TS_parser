@@ -23,7 +23,7 @@ int32_t xTS_PacketHeader::Parse(const uint8_t *Input) {
 
     uint32_t b_TEI =  0b00000000100000000000000000000000;
     uint32_t b_PSI =  0b00000000010000000000000000000000;
-    uint32_t b_TP =   0b00000000000100000000000000000000;
+    uint32_t b_TP =   0b00000000001000000000000000000000;
     uint32_t b_PID =  0b00000000000111111111111100000000;
     uint32_t b_TSC =  0b00000000000000000000000011000000;
     uint32_t b_AFC =  0b00000000000000000000000000110000;
@@ -50,3 +50,50 @@ void xTS_PacketHeader::Print() const {
 }
 
 //=============================================================================================================================================================================
+
+
+//Adaptation field methods
+
+void xTS_AdaptationField::Reset() {
+  m_AdaptationFieldControl = 0;
+  m_AdaptationFieldLength = 0;
+
+  m_DI = m_RAI = m_ESPI = m_PC = m_OPC = m_SPF = m_TPDF = m_AFEF = 0;
+}
+
+int32_t xTS_AdaptationField::Parse(const uint8_t* PacketBuffer) {
+  const int HeaderLength = 4;
+  uint32_t *AFPtr = (uint32_t *)(PacketBuffer + HeaderLength); // Skip the header
+  uint32_t AFData = xSwapBytes32(*AFPtr);
+
+    uint32_t b_DI =     0b00000000100000000000000000000000;
+    uint32_t b_RAI =    0b00000000010000000000000000000000;
+    uint32_t b_ESPI =   0b00000000001000000000000000000000;
+    uint32_t b_PC =     0b00000000000100000000000000000000;
+    uint32_t b_OPC =    0b00000000000010000000000000000000;
+    uint32_t b_SPF =    0b00000000000001000000000000000000;
+    uint32_t b_TPDF =   0b00000000000000100000000000000000;
+    uint32_t b_AFEF =   0b00000000000000010000000000000000;
+
+    m_AdaptationFieldLength = AFData >> 24;
+    m_DI = (AFData & b_DI) >> 23;
+    m_RAI = (AFData & b_RAI) >> 22;
+    m_ESPI = (AFData & b_ESPI) >> 21;
+    m_PC = (AFData & b_PC) >> 20;
+    m_OPC = (AFData & b_OPC) >> 19;
+    m_SPF = (AFData & b_SPF) >> 18;
+    m_TPDF = (AFData & b_TPDF) >> 17;
+    m_AFEF = (AFData & b_AFEF) >> 16;
+
+
+    return NOT_VALID;
+}
+
+void xTS_AdaptationField::Print() const {
+  cout << " AF: L=" << to_string(m_AdaptationFieldLength) <<
+  " DC=" << to_string(m_DI) << " RA=" << to_string(m_RAI) <<
+  " SP=" << to_string(m_ESPI) << " PR=" << to_string(m_PC) <<
+  " OR=" << to_string(m_OPC) << " SF=" << to_string(m_SPF) <<
+  " TP=" << to_string(m_TPDF) << " EX=" << to_string(m_AFEF)
+  ;
+}

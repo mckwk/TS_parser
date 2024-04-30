@@ -88,8 +88,41 @@ public:
 
 public:
   //TODO - derrived informations
-  //bool     hasAdaptationField() const { /*TODO*/ }
+  bool     hasAdaptationField() const {
+    if (m_AFC == 2 || m_AFC ==3) { return true;
+    } else return false;
+   }
   //bool     hasPayload        () const { /*TODO*/ }
 };
 
 //=============================================================================================================================================================================
+
+class xTS_AdaptationField {
+
+  protected:
+    uint8_t m_AdaptationFieldControl;
+    uint8_t m_AdaptationFieldLength;
+
+    uint8_t m_DI;
+    uint8_t m_RAI;
+    uint32_t m_ESPI;
+    uint32_t m_PC;
+    uint32_t m_OPC;
+    uint32_t m_SPF;
+    uint32_t m_TPDF;
+    uint32_t m_AFEF;
+
+  public:
+  void Reset();
+  int32_t Parse(const uint8_t* PacketBuffer);
+  void Print() const;
+
+  uint8_t getAdaptationFieldLength() const {
+    return m_AdaptationFieldLength;
+  }
+
+  uint8_t getAdaptationFieldControl() const {
+    return m_AdaptationFieldControl;
+  }
+
+};
