@@ -16,6 +16,8 @@ int main(int argc, char *argv[ ], char *envp[ ])
 
   xTS_PacketHeader TS_PacketHeader;
   xTS_AdaptationField TS_AdaptationField;
+  xPES_Assembler PES_Assembler;
+  xPES_PacketHeader PES_PacketHeader;
 
   const uint8_t size = 188;
   uint8_t  buf[size];
@@ -23,9 +25,9 @@ int main(int argc, char *argv[ ], char *envp[ ])
 
 
   //while(!feof(stream))
-  while(TS_PacketId<=32)
+  while(TS_PacketId<=40)
   {
-    //TODO - read from file
+printf("\n");
     fread(buf, 1, 188, stream);
 
     TS_PacketHeader.Reset();
@@ -33,17 +35,25 @@ int main(int argc, char *argv[ ], char *envp[ ])
     TS_PacketHeader.Parse(buf);
 
     printf("%010d ", TS_PacketId);
-    TS_PacketHeader.Print();
-    if(TS_PacketHeader.hasAdaptationField()==true) {
+  if(TS_PacketHeader.getSyncByte() == 'G' && TS_PacketHeader.getPID() == 136)
+  {
+    if(TS_PacketHeader.hasAdaptationField()){
       TS_AdaptationField.Parse(buf);
-      TS_AdaptationField.Print();
     }
-    printf("\n");
-
+    printf("%010d ", TS_PacketId);
+    TS_PacketHeader.Print();
+    if(TS_PacketHeader.hasAdaptationField()) { TS_AdaptationField.Print(); }
+    if (TS_PacketHeader.getPayload() == 1) {
+        PES_PacketHeader.Parse(buf, TS_AdaptationField.getAdaptationFieldLength());
+        PES_PacketHeader.Print();}
+    if (TS_PacketHeader.getContinuity() == 15) {
+                PES_PacketHeader.PrintLen();
+            }
+            PES_Assembler.Parse(buf, TS_PacketHeader, TS_AdaptationField);
+  }
     TS_PacketId++;
   }
 
-  //TODO - close file
   fclose(stream);
 
   return EXIT_SUCCESS;

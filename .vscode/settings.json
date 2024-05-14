@@ -2,6 +2,7 @@
   "C_Cpp.default.compilerPath": "/usr/bin/g++",
   "files.associations": {
     "cstddef": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "iostream": "cpp"
   }
 }

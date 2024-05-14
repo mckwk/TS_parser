@@ -7,16 +7,10 @@ using namespace std;
 //=============================================================================================================================================================================
 
 
-/// @brief Reset - reset all TS packet header fields
 void xTS_PacketHeader::Reset() {
     m_SB = m_TEI = m_PSI = m_TP = m_PID = m_TSC = m_AFC = m_CC = 0;
 }
 
-/**
-  @brief Parse all TS packet header fields
-  @param Input is pointer to buffer containing TS packet
-  @return Number of parsed bytes (4 on success, -1 on failure) 
- */
 int32_t xTS_PacketHeader::Parse(const uint8_t *Input) {
     uint32_t *HeaderPtr = (uint32_t *) Input;
     uint32_t HeaderData = xSwapBytes32(*HeaderPtr);
@@ -50,9 +44,9 @@ void xTS_PacketHeader::Print() const {
 }
 
 //=============================================================================================================================================================================
+// xTS_AdaptationField
+//=============================================================================================================================================================================
 
-
-//Adaptation field methods
 
 void xTS_AdaptationField::Reset() {
   m_AdaptationFieldControl = 0;
@@ -96,4 +90,78 @@ void xTS_AdaptationField::Print() const {
   " OR=" << to_string(m_OPC) << " SF=" << to_string(m_SPF) <<
   " TP=" << to_string(m_TPDF) << " EX=" << to_string(m_AFEF)
   ;
+}
+
+//=============================================================================================================================================================================
+// xPES_PacketHeader
+//=============================================================================================================================================================================
+
+void xPES_PacketHeader::Print() const {
+    cout << " PES: PSCP=" << m_PacketStartCodePrefix
+        << " SID=" << (int)m_StreamId
+        << " L=" << m_PacketLength;
+}
+
+void xPES_PacketHeader::PrintLen() const {
+    cout << " PES: Len=" << m_PacketLength+6;
+}
+
+xPES_PacketHeader::xPES_PacketHeader() {
+    m_PacketStartCodePrefix = 0;
+    m_StreamId = 0;
+    m_PacketLength = 0;
+    m_PacketLength2 = 0;
+}
+
+int32_t xPES_PacketHeader::Parse(const uint8_t* TransportStreamPacket, uint32_t AFL) {
+    int32_t PESheaderSize = 0;
+    uint32_t temp1 = *((uint32_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 1 + AFL));
+    temp1 = xSwapBytes32(temp1);
+    uint16_t temp2 = *((uint16_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 5 + AFL));
+    temp2 = xSwapBytes16(temp2);
+    uint8_t temp3 = *((uint8_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 4 + AFL));
+    uint8_t temp4 = *((uint8_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 9 + AFL));
+    uint32_t maskStartPrefix =  0b11111111111111111111111100000000;
+    uint8_t maskStreamID =      0b11111111;
+    uint16_t maskPacketLength = 0b1111111111111111;
+
+    m_PacketStartCodePrefix = (temp1 & maskStartPrefix) >> 8;
+    m_StreamId = temp3 & maskStreamID;
+    m_PacketLength = temp2 & maskPacketLength;
+    PESheaderSize += 6;
+    
+    if (m_StreamId != eStreamId::eStreamId_program_stream_map
+        && m_StreamId != eStreamId::eStreamId_padding_stream
+        && m_StreamId != eStreamId::eStreamId_private_stream_2
+        && m_StreamId != eStreamId::eStreamId_ECM
+        && m_StreamId != eStreamId::eStreamId_EMM
+        && m_StreamId != eStreamId::eStreamId_program_stream_directory
+        && m_StreamId != eStreamId::eStreamId_DSMCC_stream
+        && m_StreamId != eStreamId::eStreamId_ITUT_H222_1_type_E
+        ) {
+        PESheaderSize += 3+temp4;
+    }
+    return PESheaderSize;
+}
+
+//=============================================================================================================================================================================
+// xPES_Assembler
+//=============================================================================================================================================================================
+
+int32_t xPES_Assembler::Parse(const uint8_t* Input, const xTS_PacketHeader PacketHeader, const xTS_AdaptationField AdaptationField) {
+    int32_t PES_size = xTS::TS_PacketLength - xTS::TS_HeaderLength;
+
+    if (PacketHeader.getPayload() == 1) {
+        uint8_t header_size = (uint8_t)m_PESH.Parse(Input, AdaptationField.getAdaptationFieldLength());
+        Input += xTS::TS_HeaderLength;
+
+        if (PacketHeader.getAdaptationFieldControl() == 2 || PacketHeader.getAdaptationFieldControl() == 3) {
+            PES_size -= (1 + AdaptationField.getAdaptationFieldLength());
+            Input += (1 + AdaptationField.getAdaptationFieldLength());
+        }
+
+        PES_size -= header_size;
+        Input += header_size;
+    }
+    return PES_size;
 }
