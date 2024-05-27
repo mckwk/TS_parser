@@ -67,7 +67,6 @@ public:
   };
 
 protected:
-  //TODO - header fields, e.g.:
   uint8_t   m_SB;   //sync byte 8b
   uint8_t   m_TEI;  //transport error indicator 1b
   uint8_t   m_PSI;  //payload unit start indicator 1b
@@ -83,15 +82,12 @@ public:
   void     Print() const;
 
 public:
-  //TODO - direct access to header field value, e.g.:
   uint8_t  getSyncByte() const { return m_SB; }  
 
 public:
-  //TODO - derrived informations
   bool     hasAdaptationField() const {
     if (m_AFC == 2 || m_AFC ==3) { return true;
-    } else return false;
-   }
+    } else return false;}
   uint32_t getPayload() const { return m_PSI; }
   int getPID() {return m_PID;}
   uint32_t getAdaptationFieldControl() const { return m_AFC; }
@@ -130,6 +126,8 @@ class xTS_AdaptationField {
 
 };
 
+//=============================================================================================================================================================================
+
 class xPES_PacketHeader
 {
 public:
@@ -144,11 +142,9 @@ public:
         eStreamId_ITUT_H222_1_type_E = 0xF8,
     };
 protected:
-    //PES packet header
     uint32_t m_PacketStartCodePrefix;
     uint8_t m_StreamId;
     uint16_t m_PacketLength;
-    uint32_t m_PacketLength2;
 public:
     xPES_PacketHeader();
     void Reset();
@@ -161,6 +157,8 @@ public:
     uint8_t getStreamId() const { return m_StreamId; }
     uint16_t getPacketLength() const { return m_PacketLength; }
 };
+
+//=============================================================================================================================================================================
 
 class xPES_Assembler
 {
@@ -183,13 +181,7 @@ protected:
     bool m_Started;
     xPES_PacketHeader m_PESH;
 public:
-    void Init(int32_t PID);
-    eResult AbsorbPacket(const uint8_t* TransportStreamPacket, const xTS_PacketHeader* PacketHeader, const xTS_AdaptationField* AdaptationField);
     int32_t Parse(const uint8_t* Input, const xTS_PacketHeader PacketHeader, const xTS_AdaptationField AdaptationField);
-    void PrintPESH() const { m_PESH.Print(); }
     uint8_t* getPacket() { return m_Buffer; }
     int32_t getNumPacketBytes() const { return m_DataOffset; }
-protected:
-    void xBufferReset();
-    void xBufferAppend(const uint8_t* Data, int32_t Size);
 };

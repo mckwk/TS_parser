@@ -110,26 +110,31 @@ xPES_PacketHeader::xPES_PacketHeader() {
     m_PacketStartCodePrefix = 0;
     m_StreamId = 0;
     m_PacketLength = 0;
-    m_PacketLength2 = 0;
 }
 
 int32_t xPES_PacketHeader::Parse(const uint8_t* TransportStreamPacket, uint32_t AFL) {
     int32_t PESheaderSize = 0;
-    uint32_t temp1 = *((uint32_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 1 + AFL));
-    temp1 = xSwapBytes32(temp1);
-    uint16_t temp2 = *((uint16_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 5 + AFL));
-    temp2 = xSwapBytes16(temp2);
-    uint8_t temp3 = *((uint8_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 4 + AFL));
-    uint8_t temp4 = *((uint8_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 9 + AFL));
+
+    uint32_t startCodeTemp = *((uint32_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 1 + AFL));
+             startCodeTemp = xSwapBytes32(startCodeTemp);
+
+    uint8_t  streamIdTemp = *((uint8_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 4 + AFL));
+    
+    uint16_t PESheaderLenTemp = *((uint16_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 5 + AFL));
+             PESheaderLenTemp = xSwapBytes16(PESheaderLenTemp);
+    
+    uint8_t  temp4 = *((uint8_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 9 + AFL));
+
     uint32_t maskStartPrefix =  0b11111111111111111111111100000000;
-    uint8_t maskStreamID =      0b11111111;
+    uint8_t  maskStreamID =     streamIdTemp;
     uint16_t maskPacketLength = 0b1111111111111111;
 
-    m_PacketStartCodePrefix = (temp1 & maskStartPrefix) >> 8;
-    m_StreamId = temp3 & maskStreamID;
-    m_PacketLength = temp2 & maskPacketLength;
+    m_PacketStartCodePrefix = (startCodeTemp & maskStartPrefix) >> 8;
+    m_StreamId = streamIdTemp & maskStreamID;
+    m_PacketLength = PESheaderLenTemp & maskPacketLength;
     PESheaderSize += 6;
     
+    //długość nagłówka zależna od stream ID
     if (m_StreamId != eStreamId::eStreamId_program_stream_map
         && m_StreamId != eStreamId::eStreamId_padding_stream
         && m_StreamId != eStreamId::eStreamId_private_stream_2
