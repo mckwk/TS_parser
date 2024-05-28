@@ -1,6 +1,7 @@
 #include <iostream>
 #include "tsTransportStream.h"
 using namespace std;
+#include <cstring>
 
 //=============================================================================================================================================================================
 // xTS_PacketHeader
@@ -102,6 +103,10 @@ void xPES_PacketHeader::Print() const {
         << " L=" << m_PacketLength;
 }
 
+void xPES_PacketHeader::Reset() {
+    m_PacketStartCodePrefix, m_StreamId, m_PacketLength = 0;
+}
+
 void xPES_PacketHeader::PrintLen() const {
     cout << " PES: Len=" << m_PacketLength+6;
 }
@@ -126,11 +131,10 @@ int32_t xPES_PacketHeader::Parse(const uint8_t* TransportStreamPacket, uint32_t 
     uint8_t  temp4 = *((uint8_t*)(TransportStreamPacket + xTS::TS_HeaderLength + 9 + AFL));
 
     uint32_t maskStartPrefix =  0b11111111111111111111111100000000;
-    uint8_t  maskStreamID =     streamIdTemp;
     uint16_t maskPacketLength = 0b1111111111111111;
 
     m_PacketStartCodePrefix = (startCodeTemp & maskStartPrefix) >> 8;
-    m_StreamId = streamIdTemp & maskStreamID;
+    m_StreamId = streamIdTemp;
     m_PacketLength = PESheaderLenTemp & maskPacketLength;
     PESheaderSize += 6;
     
@@ -155,6 +159,8 @@ int32_t xPES_PacketHeader::Parse(const uint8_t* TransportStreamPacket, uint32_t 
 
 int32_t xPES_Assembler::Parse(const uint8_t* Input, const xTS_PacketHeader PacketHeader, const xTS_AdaptationField AdaptationField) {
     int32_t PES_size = xTS::TS_PacketLength - xTS::TS_HeaderLength;
+    const char* outFile = "PID136.mp2";
+    FILE* pFile = fopen(outFile, "ab");
 
     if (PacketHeader.getPayload() == 1) {
         uint8_t header_size = (uint8_t)m_PESH.Parse(Input, AdaptationField.getAdaptationFieldLength());
@@ -165,8 +171,19 @@ int32_t xPES_Assembler::Parse(const uint8_t* Input, const xTS_PacketHeader Packe
             Input += (1 + AdaptationField.getAdaptationFieldLength());
         }
 
-        PES_size -= header_size;
+       PES_size -= header_size;
         Input += header_size;
+        
+    } else if (PacketHeader.getContinuity() == 15) {
+        PES_size -= 48;
+        Input += 52;
+    } else {
+        Input += 4;
     }
+    fwrite(Input, sizeof(uint8_t), PES_size, pFile);
+    fclose(pFile);
+    
     return PES_size;
 }
+
+
